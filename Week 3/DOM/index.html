@@ -1,0 +1,46 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>To do List</h1>
+    <div>
+      <div id="todo-1">
+        <h3>1. Wake up early</h3>
+        <button onclick="remove(1)">Delete</button>
+      </div>
+      <div id="todo-2">
+        <h3>2. Go to Gym</h3>
+        <button onclick="remove(2)">Delete</button>
+      </div>
+      <div id="todo-3">
+        <h3>3. Take lessons</h3>
+        <button onclick="remove(3)">Delete</button>
+      </div>
+    </div>
+
+    <div>
+      <br />
+      <input type="text" />
+      <button>Add To do</button>
+    </div>
+  </body>
+  <script>
+    function remove(index) {
+      const element = document.getElementById("todo-" + index);
+      element.parentNode.removeChild(element);
+    }
+
+    const el = document.createElement("h3");
+    el.innerHTML = "This is a To do App";
+    const parent = document.querySelector("body");
+
+    function callback() {
+      parent.appendChild(el);
+    }
+
+    setTimeout(callback, 3000);
+  </script>
+</html>
