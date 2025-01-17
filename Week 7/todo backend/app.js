@@ -1,29 +1,66 @@
+const bcrypt = require("bcrypt");
 const express = require("express");
 const { UserModel, TodoModel } = require("./db");
 const app = express();
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const JWT_SECRET = "bhavenrathod";
+const { z } = require("zod");
 
 mongoose.connect(
-  "mongodb+srv://bhavenrathod:xE2nDGY0UOucv3sO@cluster0.31t3k.mongodb.net/todo-app-database"
+  "mongodb+srv://bhavenrathod:URxPUf6tlrmgnuDK@cluster0.31t3k.mongodb.net/todo-app-database"
 );
 
 app.use(express.json());
 app.post("/signup", async function (req, res, next) {
+  // input validation
+  const requiredBody = z.object({
+    username: z.string().min(5).max(100).email(),
+    password: z
+      .string()
+      .min(5)
+      .max(100)
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
+      ),
+    name: z.string().min(5).max(100),
+  });
+
+  const parsedWithSuccess = requiredBody.safeParse(req.body);
+  if (!parsedWithSuccess.success) {
+    return res.json({
+      message: "Incorrect Format",
+      error: parsedWithSuccess.error,
+    });
+  }
+
   const username = req.body.username;
   const password = req.body.password;
   const name = req.body.name;
 
-  await UserModel.create({
-    username: username,
-    password: password,
-    name: name,
-  });
+  let errorThrown = false;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 5);
 
-  res.json({
-    message: "You are signed up",
-  });
+    await UserModel.create({
+      username: username,
+      password: hashedPassword,
+      name: name,
+    });
+  } catch (e) {
+    console.log("Error in DB");
+
+    return res.json({
+      message: "User already exists",
+    });
+    errorThrown = true;
+  }
+
+  if (!errorThrown) {
+    return res.json({
+      message: "You are signed up",
+    });
+  }
 });
 
 app.post("/signin", async function (req, res, next) {
@@ -32,12 +69,18 @@ app.post("/signin", async function (req, res, next) {
 
   const user = await UserModel.findOne({
     username: username,
-    password: password,
   });
 
-  console.log(user);
+  if (!user) {
+    res.status(403).json({
+      message: "User not found",
+    });
+    return;
+  }
 
-  if (user) {
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (passwordMatch) {
     const token = jwt.sign(
       {
         id: user._id.toString(),
