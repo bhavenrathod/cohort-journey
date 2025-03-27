@@ -15,7 +15,7 @@ function Todo({ id }) {
   const currentTodo = useRecoilValue(todosAtomFamily(id));
   return (
     <div>
-      {currentTodo.title}
+      {currentTodo.title} <br />
       {currentTodo.description}
     </div>
   );
