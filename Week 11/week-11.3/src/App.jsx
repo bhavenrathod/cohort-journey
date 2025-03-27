@@ -1,11 +1,7 @@
-import { RecoilRoot, useRecoilValue } from "recoil";
-import {
-  jobsAtom,
-  messagesAtom,
-  networkAtom,
-  notificationAtom,
-  totalnotificationSelector,
-} from "./atoms";
+import { RecoilRoot, useRecoilState, useRecoilValue } from "recoil";
+import { notifications, totalNotificationSelector } from "./atoms";
+import { useEffect } from "react";
+import axios from "axios";
 
 function App() {
   return (
@@ -16,26 +12,33 @@ function App() {
 }
 
 function MainApp() {
-  const networkCount = useRecoilValue(networkAtom);
-  const notificationCount = useRecoilValue(notificationAtom);
-  const jobCount = useRecoilValue(jobsAtom);
-  const meesagesCount = useRecoilValue(messagesAtom);
-  const totalnotificationCount = useRecoilValue(totalnotificationSelector);
+  const [networkCount, setNetworkCount] = useRecoilState(notifications);
+  const totalNotificationCount = useRecoilValue(totalNotificationSelector);
+
+  useEffect(() => {
+    // fetch
+    axios
+      .get("https://mocki.io/v1/b4c51a0d-74c6-4a8a-8de4-aa5ea00aa792")
+      .then((res) => {
+        setNetworkCount(res.data);
+      })
+      .catch((error) => console.error("Error fetching data:", error));
+  }, []);
 
   return (
-    <div>
+    <>
       <button>Home</button>
 
       <button>
-        My Network(
-        {networkCount >= "100" ? "99+" : networkCount})
+        My network ({networkCount.network >= 100 ? "99+" : networkCount.network}
+        )
       </button>
-      <button>Notifications({notificationCount})</button>
-      <button>Jobs({jobCount})</button>
-      <button>Messages({meesagesCount})</button>
+      <button>Jobs ({networkCount.jobs})</button>
+      <button>Messaging ({networkCount.messaging})</button>
+      <button>Notifications ({networkCount.notifications})</button>
 
-      <button>Me({totalnotificationCount})</button>
-    </div>
+      <button>Me ({totalNotificationCount})</button>
+    </>
   );
 }
 
